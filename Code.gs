@@ -1,6 +1,6 @@
 const HEADERS_ = ['Date', 'Référence', 'Nom', 'Prénom', 'CIN', 'Téléphone', 'E-mail', 'Club / association', 'Ville', 'Consentement', 'Statut du paiement', 'Notifications envoyées'];
 const CAPACITY_ = 80;
-const ORGANIZERS_ = ['garaouimar@gmail.com', 'tkkamaltalha86@gmail.com'];
+const ORGANIZERS_ = ['garaouimar@gmail.com', 'tkkamaltalha86@gmail.com', 'wissam2oussama@gmail.com'];
 const PAYMENT_STATUS_ = 'En attente de vérification';
 
 function doGet() {
