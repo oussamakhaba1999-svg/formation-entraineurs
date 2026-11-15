@@ -1,5 +1,7 @@
-const HEADERS_ = ['Date', 'Référence', 'Nom', 'Prénom', 'CIN', 'Téléphone', 'E-mail', 'Club / association', 'Ville', 'Consentement'];
+const HEADERS_ = ['Date', 'Référence', 'Nom', 'Prénom', 'CIN', 'Téléphone', 'E-mail', 'Club / association', 'Ville', 'Consentement', 'Statut du paiement', 'Notifications envoyées'];
 const CAPACITY_ = 80;
+const ORGANIZERS_ = ['garaouimar@gmail.com', 'tkkamaltalha86@gmail.com'];
+const PAYMENT_STATUS_ = 'En attente de vérification';
 
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index').setTitle('Formation des entraîneurs | Inscription')
@@ -18,12 +20,33 @@ function sheet_() {
 }
 // Run manually in the Apps Script editor; trailing underscore prevents client calls.
 function setup_() {
-  const c = config_();
-  if (!c.id) throw new Error('Définir SPREADSHEET_ID');
-  const book = SpreadsheetApp.openById(c.id);
+  const properties = PropertiesService.getScriptProperties();
+  let id = properties.getProperty('SPREADSHEET_ID');
+  if (!id) {
+    const created = SpreadsheetApp.create('Formation entraîneurs Marrakech — Inscriptions');
+    id = created.getId();
+    properties.setProperty('SPREADSHEET_ID', id);
+  }
+  const book = SpreadsheetApp.openById(id);
   const s = book.getSheetByName('Inscriptions') || book.insertSheet('Inscriptions');
-  if (s.getLastRow() === 0) { s.appendRow(HEADERS_); s.setFrozenRows(1); }
+  if (s.getLastRow() === 0) s.appendRow(HEADERS_);
+  else {
+    const old = s.getRange(1, 1, 1, 10).getValues()[0];
+    if (old.join('|') !== HEADERS_.slice(0, 10).join('|')) throw new Error('En-têtes incompatibles');
+    s.getRange(1, 11, 1, 2).setValues([HEADERS_.slice(10)]);
+    if (s.getLastRow() > 1) {
+      const statuses = s.getRange(2, 11, s.getLastRow() - 1, 1).getValues();
+      s.getRange(2, 11, statuses.length, 1).setValues(statuses.map(r => [r[0] || PAYMENT_STATUS_]));
+    }
+  }
+  s.setFrozenRows(1);
+  // Restricted file: never enable public or link sharing.
+  ORGANIZERS_.forEach(email => book.addEditor(email));
   sheet_();
+  if (!ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'retryNotifications_')) {
+    ScriptApp.newTrigger('retryNotifications_').timeBased().everyMinutes(5).create();
+  }
+  return book.getUrl();
 }
 function getStatus() {
   try {
@@ -61,9 +84,38 @@ function registerParticipant(payload) {
     if (cins.includes(p.cin)) return { ok: false, code: 'REFUSED' };
     if (count >= CAPACITY_) return { ok: false, code: 'FULL', remaining: 0 };
     const reference = Utilities.getUuid();
-    s.appendRow([new Date(), reference, p.nom, p.prenom, p.cin, p.telephone, p.email, p.club, p.ville, 'Accepté'].map(v => typeof v === 'string' ? safeCell_(v) : v));
+    s.appendRow([new Date(), reference, p.nom, p.prenom, p.cin, p.telephone, p.email, p.club, p.ville, 'Accepté', PAYMENT_STATUS_, ''].map(v => typeof v === 'string' ? safeCell_(v) : v));
     SpreadsheetApp.flush();
+    // Notification errors must never turn an already saved registration into a failure.
+    try { notifyRow_(s, s.getLastRow()); } catch (_) {}
     return { ok: true, reference, remaining: CAPACITY_ - count - 1 };
   } catch (_) { return { ok: false, code: 'UNAVAILABLE' }; }
   finally { lock.releaseLock(); }
+}
+
+// Private functions cannot be called via google.script.run.
+function notifyRow_(s, row) {
+  const values = s.getRange(row, 1, 1, HEADERS_.length).getValues()[0];
+  let sent = String(values[11] || '').split(',').filter(Boolean);
+  for (const recipient of ORGANIZERS_) {
+    if (sent.includes(recipient)) continue;
+    // Keep identity documents and contact details out of notification emails.
+    MailApp.sendEmail({to: recipient, subject: 'Nouvelle inscription — Formation entraîneurs',
+      body: 'Une nouvelle inscription a été enregistrée.\nRéférence : ' + values[1] +
+        '\nPaiement : ' + values[10] + '\nConsultez le fichier privé : ' +
+        SpreadsheetApp.openById(config_().id).getUrl()});
+    sent.push(recipient);
+    s.getRange(row, 12).setValue(sent.join(','));
+    SpreadsheetApp.flush();
+  }
+}
+function retryNotifications_() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(1000)) return;
+  try {
+    const s = sheet_();
+    for (let row = 2; row <= s.getLastRow(); row++) {
+      try { notifyRow_(s, row); } catch (_) { break; }
+    }
+  } finally { lock.releaseLock(); }
 }
