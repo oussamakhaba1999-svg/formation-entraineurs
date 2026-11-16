@@ -27,3 +27,5 @@ test('email failure preserves saved registration and retries only unsent notific
 test('payment instructions only appear after saved success',()=>{const html=fs.readFileSync('Index.html','utf8');assert.match(html,/id="payment" class="payment" hidden/);assert.match(html,/835780030017331523518468/);assert.match(html,/wa\.me\/212665959995\?text=/);assert.match(html,/encodeURIComponent/);assert.match(html,/showPayment\(r.reference\)/);});
 
 test("email is optional but validated when provided",()=>{const h=harness();assert.equal(h.ctx.registerParticipant({...valid(),email:""}).ok,true);assert.equal(h.rows[1][6],"");const html=fs.readFileSync("Index.html","utf8");assert.doesNotMatch(html, /name="email"[^>]*required/);});
+
+test("club is optional and the public capacity counter is removed",()=>{const h=harness();assert.equal(h.ctx.registerParticipant({...valid(),club:"",email:""}).ok,true);assert.equal(h.rows[1][7],"");const html=fs.readFileSync("Index.html","utf8");assert.doesNotMatch(html,/name="club"[^>]*required/);assert.doesNotMatch(html,/id="remaining"|participants maximum|places restantes/);});
