@@ -11,11 +11,10 @@
 <header><img class="league-logo" width="100" height="100" src="https://oussamakhaba1999-svg.github.io/formation-entraineurs/league-logo.png" alt="Logo de la Ligue Marrakech-Tensift-Al Haouz de Bodybuilding et Fitness"><div class="brand">Ligue Marrakech-Tensift-Al Haouz<br>de Bodybuilding et Fitness</div><a href="#inscription">Accéder au formulaire ↗</a></header>
 <main>
 <section aria-labelledby="title"><div class="eyebrow">Bodybuilding & fitness · Formation</div><h1 id="title">Transmettez<br>votre passion.<br><em>Devenez entraîneur.</em></h1><p class="intro">Inscrivez-vous à la formation des entraîneurs organisée par la Ligue Marrakech-Tensift-Al Haouz de Bodybuilding et Fitness.</p>
-<div class="capacity"><strong>80</strong><span>participants maximum<b id="remaining">Disponibilité à confirmer</b></span></div>
 <div class="details"><p><span>Dates de la formation</span>À renseigner par la Ligue</p><p><span>Lieu de la formation</span>À renseigner par la Ligue</p><p><span>Contact WhatsApp</span><a href="https://wa.me/212665959995" target="_blank" rel="noopener noreferrer">+212 665-959995</a></p></div>
 <details class="privacy"><summary>Protection de vos données</summary><p id="privacy">La notice de confidentialité sera renseignée par la Ligue avant l’ouverture des inscriptions. Aucun renseignement n’est envoyé dans cet aperçu.</p></details>
 </section>
-<section class="card" id="inscription" aria-labelledby="form-title"><div class="eyebrow">Votre prochaine étape</div><h2 id="form-title">Inscription à la formation</h2><p class="sub">Tous les champs sont obligatoires sauf l’adresse e-mail. Une seule inscription par CIN.</p>
+<section class="card" id="inscription" aria-labelledby="form-title"><div class="eyebrow">Votre prochaine étape</div><h2 id="form-title">Inscription à la formation</h2><p class="sub">Tous les champs sont obligatoires sauf l’adresse e-mail et le club ou l’association. Une seule inscription par CIN.</p>
 <div class="status" id="status" role="status">Aperçu uniquement — les inscriptions ne sont pas encore ouvertes.</div>
 <form id="form"><fieldset id="fields"><div class="fields">
 <label>Nom<input name="nom" autocomplete="family-name" required maxlength="100" placeholder="Votre nom"></label>
@@ -23,7 +22,7 @@
 <label>Numéro de CIN<input name="cin" required maxlength="20" placeholder="Ex. : AB123456" autocapitalize="characters" spellcheck="false"><span class="hint">Votre carte d’identité nationale</span></label>
 <label>Téléphone<input name="telephone" type="tel" autocomplete="tel" required maxlength="30" placeholder="06 XX XX XX XX"></label>
 <label class="full">Adresse e-mail (facultatif)<input name="email" type="email" autocomplete="email" maxlength="254" placeholder="nom@exemple.com"></label>
-<label class="full">Club ou association<input name="club" autocomplete="organization" required maxlength="100" placeholder="Nom de votre club ou association"></label>
+<label class="full">Club ou association (facultatif)<input name="club" autocomplete="organization" maxlength="100" placeholder="Nom de votre club ou association"></label>
 <label class="full">Ville<input name="ville" autocomplete="address-level2" required maxlength="100" placeholder="Votre ville"></label>
 </div><div class="trap" aria-hidden="true"><label>Site internet<input name="website" tabindex="-1" autocomplete="off"></label></div>
 <label class="consent"><input name="consent" type="checkbox" required><span>J’ai lu la notice de confidentialité et j’accepte l’utilisation de mes informations pour gérer mon inscription à cette formation.</span></label>
@@ -45,10 +44,9 @@ document.getElementById('copy-rib').addEventListener('click',async()=>{
  catch(_){feedback.textContent='Copie indisponible : sélectionnez le RIB ci-dessus pour le copier manuellement';}
 });
 function availability(s){
- document.getElementById('remaining').textContent=Number.isInteger(s.remaining)?s.remaining+' place'+(s.remaining===1?'':'s')+' restante'+(s.remaining===1?'':'s'):'Disponibilité à confirmer';
  if(s.privacy)document.getElementById('privacy').textContent=s.privacy;
  button.disabled=!s.available;
- statusBox.textContent=s.available?'Inscriptions ouvertes · Votre inscription est enregistrée avant le paiement.':s.remaining===0?'Les 80 places ont été réservées. Les inscriptions sont closes.':'Les inscriptions ne sont pas encore ouvertes.';
+ statusBox.textContent=s.available?'Inscriptions ouvertes · Votre inscription est enregistrée avant le paiement.':s.remaining===0?'Les inscriptions sont closes.':'Les inscriptions ne sont pas encore ouvertes.';
 }
 function show(message,ok){result.className=ok?'success':'error';result.textContent=message;result.focus();}
 if(connected)google.script.run.withSuccessHandler(availability).withFailureHandler(()=>{statusBox.textContent='Service indisponible. Veuillez réessayer plus tard.';}).getStatus();
@@ -58,8 +56,8 @@ form.addEventListener('submit',event=>{
  const data=Object.fromEntries(new FormData(form));data.consent=form.elements.consent.checked;
  google.script.run.withSuccessHandler(r=>{
   sending=false;button.textContent='Valider mon inscription →';
-  if(r.ok){document.getElementById('fields').disabled=true;show('Votre inscription est enregistrée. Paiement en attente de vérification.\nRéférence : '+r.reference+'\nConservez cette référence pour tout échange avec la Ligue.',true);document.getElementById('remaining').textContent=r.remaining+' places restantes';showPayment(r.reference);form.reset();}
-  else{const messages={INVALID:'Vérifiez les champs, le format de la CIN, le téléphone et votre consentement.',REFUSED:'Cette inscription ne peut pas être enregistrée. Si vous avez déjà envoyé ce formulaire, contactez la Ligue avant de réessayer.',FULL:'Les 80 places ont été réservées. Les inscriptions sont closes.',CLOSED:'Les inscriptions sont actuellement fermées.',BUSY:'Le service est occupé. Veuillez réessayer dans un instant.',UNAVAILABLE:'Impossible de vérifier l’enregistrement. Contactez la Ligue avant de réessayer.'};show(messages[r.code]||messages.UNAVAILABLE,false);if(!['FULL','CLOSED'].includes(r.code))button.disabled=false;else statusBox.textContent=messages[r.code];}
+  if(r.ok){document.getElementById('fields').disabled=true;show('Votre inscription est enregistrée. Paiement en attente de vérification.\nRéférence : '+r.reference+'\nConservez cette référence pour tout échange avec la Ligue.',true);showPayment(r.reference);form.reset();}
+  else{const messages={INVALID:'Vérifiez les champs, le format de la CIN, le téléphone et votre consentement.',REFUSED:'Cette inscription ne peut pas être enregistrée. Si vous avez déjà envoyé ce formulaire, contactez la Ligue avant de réessayer.',FULL:'Les inscriptions sont closes.',CLOSED:'Les inscriptions sont actuellement fermées.',BUSY:'Le service est occupé. Veuillez réessayer dans un instant.',UNAVAILABLE:'Impossible de vérifier l’enregistrement. Contactez la Ligue avant de réessayer.'};show(messages[r.code]||messages.UNAVAILABLE,false);if(!['FULL','CLOSED'].includes(r.code))button.disabled=false;else statusBox.textContent=messages[r.code];}
  }).withFailureHandler(()=>{sending=false;button.textContent='Valider mon inscription →';show('La confirmation n’a pas pu être reçue. Votre inscription a peut-être été enregistrée. Contactez la Ligue avant de réessayer.',false);}).registerParticipant(data);
 });
 </script></body></html>
