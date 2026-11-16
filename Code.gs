@@ -84,7 +84,7 @@ function registerParticipant(payload) {
     if (cins.includes(p.cin)) return { ok: false, code: 'REFUSED' };
     if (count >= CAPACITY_) return { ok: false, code: 'FULL', remaining: 0 };
     const reference = Utilities.getUuid();
-    s.appendRow([new Date(), reference, p.nom, p.prenom, p.cin, p.telephone, p.email, p.club, p.ville, 'Accepté', PAYMENT_STATUS_, ''].map(v => typeof v === 'string' ? safeCell_(v) : v));
+    s.appendRow([new Date(), reference, p.nom, p.prenom, p.cin, "'" + p.telephone, p.email, p.club, p.ville, 'Accepté', PAYMENT_STATUS_, ''].map(v => typeof v === 'string' ? safeCell_(v) : v));
     SpreadsheetApp.flush();
     // Notification errors must never turn an already saved registration into a failure.
     try { notifyRow_(s, s.getLastRow()); } catch (_) {}
