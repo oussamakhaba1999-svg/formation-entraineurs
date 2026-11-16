@@ -61,7 +61,7 @@ function validate_(p) {
   for (const key of ['nom', 'prenom', 'cin', 'telephone', 'email', 'club', 'ville']) {
     if (typeof p[key] !== 'string') return null;
     clean[key] = p[key].normalize('NFKC').trim().replace(/\s+/g, ' ');
-    if ((key !== 'email' && !clean[key]) || clean[key].length > (key === 'email' ? 254 : 100) || /[\x00-\x1f\x7f]/.test(clean[key])) return null;
+    if ((!['email', 'club'].includes(key) && !clean[key]) || clean[key].length > (key === 'email' ? 254 : 100) || /[\x00-\x1f\x7f]/.test(clean[key])) return null;
   }
   clean.cin = clean.cin.replace(/\s/g, '').toUpperCase();
   clean.telephone = clean.telephone.replace(/[\s().-]/g, '');
